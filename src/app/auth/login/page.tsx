@@ -6,6 +6,14 @@ import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword, AuthError } from 'firebase/auth';
 import Button from '@/components/ui/Button';
 
+interface ButtonProps {
+  children: React.ReactNode;
+  type?: 'button' | 'submit' | 'reset';
+  variant?: 'primary' | 'secondary';
+  className?: string;
+  disabled?: boolean;
+}
+
 export default function LoginPage() {
   const router = useRouter();
   const [email, setEmail] = useState('');
@@ -87,17 +95,12 @@ export default function LoginPage() {
               />
             </div>
 
-            <Button
-              type="submit"
-              variant="primary"
-              className="w-full"
-              disabled={loading}
-            >
-              {loading ? 'جاري تسجيل الدخول...' : 'تسجيل الدخول'}
-            </Button>
+            <Button type="submit" variant="primary" className={`w-full ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}>
+  {loading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+</Button>
           </form>
         </div>
       </div>
     </div>
   );
-} 
+}
