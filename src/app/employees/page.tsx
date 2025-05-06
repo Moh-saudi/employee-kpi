@@ -4,8 +4,8 @@ import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, firestore } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, getDocs, addDoc, doc, deleteDoc, updateDoc, serverTimestamp, query, where } from 'firebase/firestore';
-import { Employee, EmployeeCategory, EmployeeGrade, EmployeeAppointment } from '@/types';
+import { collection, getDocs, addDoc, doc, updateDoc, serverTimestamp, query, where } from 'firebase/firestore';
+import { Employee } from '@/types';
 import { Header } from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import Button from '@/components/ui/Button';
@@ -14,6 +14,41 @@ import { Select } from '@/components/ui/Select';
 import Card from '@/components/ui/Card';
 
 type FormData = Omit<Employee, 'id' | 'createdAt' | 'updatedAt'>;
+
+const categoryOptions = [
+  { value: 'doctor', label: 'طبيب' },
+  { value: 'pharmacist', label: 'صيدلي' },
+  { value: 'dentist', label: 'أسنان' },
+  { value: 'physiotherapist', label: 'علاج طبيعي' },
+  { value: 'administrative', label: 'إداري' },
+  { value: 'other', label: 'أخرى' }
+];
+
+const gradeOptions = [
+  { value: 'excellent', label: 'ممتازة' },
+  { value: 'senior', label: 'كبير' },
+  { value: 'first', label: 'الأولى' },
+  { value: 'second', label: 'الثانية' },
+  { value: 'third', label: 'الثالثة' }
+];
+
+const appointmentOptions = [
+  { value: 'permanent', label: 'معين' },
+  { value: 'delegated', label: 'منتدب' },
+  { value: 'mission', label: 'مأمورية' },
+  { value: 'assignment', label: 'تكليف' },
+  { value: 'other', label: 'أخرى' }
+];
+
+const filterOptions = [
+  { value: 'all', label: 'جميع الفئات' },
+  { value: 'doctor', label: 'أطباء' },
+  { value: 'pharmacist', label: 'صيادلة' },
+  { value: 'dentist', label: 'أسنان' },
+  { value: 'physiotherapist', label: 'علاج طبيعي' },
+  { value: 'administrative', label: 'إداريين' },
+  { value: 'other', label: 'أخرى' }
+];
 
 export default function EmployeesPage() {
   const router = useRouter();
@@ -252,18 +287,11 @@ export default function EmployeesPage() {
                 type="text"
                 name="nationalId"
                 value={formData?.nationalId || ''}
-                onChange={(e) => {
-                  const value = e.target.value;
-                  if (value.length <= 14) {
-                    handleInputChange(e);
-                  }
-                }}
-                maxLength={14}
-                pattern="[0-9]*"
-                inputMode="numeric"
+                onChange={handleInputChange}
                 required
+                pattern="[0-9]{14}"
+                title="الرقم القومي يجب أن يكون 14 رقمًا"
               />
-              <p className="text-xs text-gray-500 mt-1">يجب أن يكون الرقم القومي 14 رقمًا</p>
             </div>
 
             <div>
@@ -272,13 +300,7 @@ export default function EmployeesPage() {
                 name="category"
                 value={formData?.category || 'doctor'}
                 onChange={handleSelectChange}
-                options={[
-                  { value: 'doctor', label: 'طبيب' },
-                  { value: 'pharmacist', label: 'صيدلي' },
-                  { value: 'dentist', label: 'طبيب أسنان' },
-                  { value: 'physiotherapist', label: 'علاج طبيعي' },
-                  { value: 'administrative', label: 'إداري' }
-                ]}
+                options={categoryOptions}
                 required
               />
             </div>
@@ -289,13 +311,7 @@ export default function EmployeesPage() {
                 name="grade"
                 value={formData?.grade || 'excellent'}
                 onChange={handleSelectChange}
-                options={[
-                  { value: 'excellent', label: 'ممتاز' },
-                  { value: 'senior', label: 'كبير' },
-                  { value: 'first', label: 'أول' },
-                  { value: 'second', label: 'ثاني' },
-                  { value: 'third', label: 'ثالث' }
-                ]}
+                options={gradeOptions}
                 required
               />
             </div>
@@ -306,52 +322,37 @@ export default function EmployeesPage() {
                 name="appointment"
                 value={formData?.appointment || 'permanent'}
                 onChange={handleSelectChange}
-                options={[
-                  { value: 'permanent', label: 'دائم' },
-                  { value: 'delegated', label: 'منتدب' },
-                  { value: 'mission', label: 'مأمورية' },
-                  { value: 'assignment', label: 'تكليف' }
-                ]}
+                options={appointmentOptions}
                 required
               />
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ الدخول</label>
-              <input
+              <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ التعيين</label>
+              <Input
                 type="date"
                 name="joinDate"
-                value={formData?.joinDate instanceof Date ? formData.joinDate.toISOString().split('T')[0] : ''}
-                onChange={handleInputChange}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 border"
+                value={formData?.joinDate ? new Date(formData.joinDate).toISOString().split('T')[0] : ''}
+                onChange={(e) => {
+                  const date = new Date(e.target.value);
+                  setFormData((prev: Partial<FormData>) => ({
+                    ...prev,
+                    joinDate: date
+                  }));
+                }}
                 required
               />
             </div>
 
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">الملفات الموكلة</label>
-              <textarea
-                name="assignedFiles"
-                value={(formData?.assignedFiles || []).join(', ')}
-                onChange={(e) => setFormData({ ...formData, assignedFiles: e.target.value.split(', ').filter(Boolean) } as any)}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 border"
-                rows={3}
-                placeholder="أدخل الملفات مفصولة بفواصل"
-              />
-              <p className="text-xs text-gray-500 mt-1">أدخل الملفات الموكلة مفصولة بفواصل</p>
-            </div>
-
-            <div className="flex justify-end gap-4 pt-4">
+            <div className="flex justify-end space-x-4 space-x-reverse">
               <Button
+                type="button"
                 variant="secondary"
                 onClick={() => isEdit ? setEditingEmployee(null) : setShowAddForm(false)}
               >
                 إلغاء
               </Button>
-              <Button
-                type="submit"
-                variant="primary"
-              >
+              <Button type="submit" variant="primary">
                 {buttonText}
               </Button>
             </div>
@@ -371,85 +372,44 @@ export default function EmployeesPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* الهيدر */}
       <Header />
       
       <div className="flex flex-1">
-        {/* القائمة الجانبية */}
         <Sidebar />
         
-        {/* المحتوى الرئيسي */}
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">إدارة الموظفين</h1>
+              <h1 className="text-2xl font-bold text-gray-900">الموظفين</h1>
               <Button
                 variant="primary"
                 onClick={() => setShowAddForm(true)}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                }
               >
                 إضافة موظف جديد
               </Button>
             </div>
 
-            {/* أدوات البحث والتصفية */}
-            <Card className="mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                <div className="md:col-span-7">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">بحث</label>
-                  <input
+            <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
+                  <Input
                     type="text"
-                    placeholder="ابحث بالاسم أو الرقم القومي..."
+                    placeholder="بحث عن موظف..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 border"
                   />
                 </div>
-                
-                <div className="md:col-span-5">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">تصفية حسب الفئة</label>
-                  <div className="flex flex-wrap gap-2">
-                    <button
-                      onClick={() => setActiveFilter('all')}
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${activeFilter === 'all' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}
-                    >
-                      الكل
-                    </button>
-                    <button
-                      onClick={() => setActiveFilter('doctor')}
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${activeFilter === 'doctor' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}
-                    >
-                      طبيب
-                    </button>
-                    <button
-                      onClick={() => setActiveFilter('pharmacist')}
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${activeFilter === 'pharmacist' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}
-                    >
-                      صيدلي
-                    </button>
-                    <button
-                      onClick={() => setActiveFilter('dentist')}
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${activeFilter === 'dentist' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}
-                    >
-                      أسنان
-                    </button>
-                    <button
-                      onClick={() => setActiveFilter('administrative')}
-                      className={`px-3 py-1 rounded-full text-sm font-medium ${activeFilter === 'administrative' ? 'bg-blue-100 text-blue-800' : 'bg-gray-100 text-gray-800'}`}
-                    >
-                      إداري
-                    </button>
-                  </div>
+                <div className="w-full md:w-48">
+                  <Select
+                    value={activeFilter}
+                    onChange={(e) => setActiveFilter(e.target.value)}
+                    options={filterOptions}
+                  />
                 </div>
               </div>
-            </Card>
+            </div>
 
-            {/* عرض البيانات */}
-            <Card>
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
@@ -470,7 +430,7 @@ export default function EmployeesPage() {
                         نوع التعيين
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        تاريخ الدخول
+                        تاريخ التعيين
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         الإجراءات
@@ -478,64 +438,53 @@ export default function EmployeesPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredEmployees.length === 0 ? (
-                      <tr>
-                        <td colSpan={7} className="px-6 py-4 text-center text-gray-500">
-                          لا توجد بيانات متطابقة مع معايير البحث
+                    {filteredEmployees.map((employee) => (
+                      <tr key={employee.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {employee.name}
                         </td>
-                      </tr>
-                    ) : (
-                      filteredEmployees.map((employee) => (
-                        <tr key={employee.id} className="hover:bg-gray-50">
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <div className="font-medium text-gray-900">{employee.name}</div>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {employee.nationalId}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap">
-                            <span className="px-2 inline-flex text-xs leading-5 font-semibold rounded-full bg-blue-100 text-blue-800">
-                              {getCategoryLabel(employee.category)}
-                            </span>
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {getGradeLabel(employee.grade)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {getAppointmentTypeLabel(employee.appointment)}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                            {employee.joinDate.toLocaleDateString('ar-EG')}
-                          </td>
-                          <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 space-x-reverse">
-                            <button 
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {employee.nationalId}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {getCategoryLabel(employee.category)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {getGradeLabel(employee.grade)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {getAppointmentTypeLabel(employee.appointment)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {employee.joinDate ? new Date(employee.joinDate).toLocaleDateString('ar-SA') : '-'}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="flex space-x-2 space-x-reverse">
+                            <Button
+                              variant="secondary"
                               onClick={() => openEditForm(employee)}
-                              className="text-blue-600 hover:text-blue-900 ml-4"
                             >
                               تعديل
-                            </button>
-                            <button 
+                            </Button>
+                            <Button
+                              variant="secondary"
                               onClick={() => handleDeleteEmployee(employee.id)}
-                              className="text-red-600 hover:text-red-900"
                             >
                               حذف
-                            </button>
-                          </td>
-                        </tr>
-                      ))
-                    )}
+                            </Button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
                   </tbody>
                 </table>
               </div>
-            </Card>
+            </div>
           </div>
         </main>
       </div>
 
-      {/* نموذج إضافة موظف جديد */}
       {showAddForm && renderEmployeeForm()}
-
-      {/* نموذج تعديل بيانات الموظف */}
       {editingEmployee && renderEmployeeForm(true)}
     </div>
   );

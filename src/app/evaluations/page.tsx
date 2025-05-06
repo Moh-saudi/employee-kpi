@@ -31,6 +31,8 @@ const ratingLabels: Record<number, string> = {
   5: 'ممتاز'
 };
 
+type Period = string | { month: number; year: number };
+
 export default function EvaluationsPage() {
   const router = useRouter();
   const [evaluations, setEvaluations] = useState<Evaluation[]>([]);
@@ -215,7 +217,7 @@ export default function EvaluationsPage() {
     return Array.from(periods).sort().reverse();
   };
 
-  const formatPeriod = (period: string | { month: number; year: number } | undefined) => {
+  const formatPeriod = (period: Period | undefined) => {
     if (!period) return '-';
     const monthNames = [
       'يناير', 'فبراير', 'مارس', 'أبريل', 'مايو', 'يونيو',
@@ -248,6 +250,7 @@ export default function EvaluationsPage() {
         periodStr = evaluation.period;
       }
     }
+    
     const matchesPeriod = selectedPeriod === 'all' || periodStr === selectedPeriod;
     
     return matchesSearch && matchesPeriod;
@@ -260,9 +263,35 @@ export default function EvaluationsPage() {
     const formTitle = isEdit ? 'تعديل التقييم' : 'إضافة تقييم جديد';
     const buttonText = isEdit ? 'حفظ التغييرات' : 'إضافة';
 
+    const handleInputChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+      const { name, value } = e.target;
+      setFormData((prev: Partial<Evaluation>) => ({
+        ...prev,
+        [name]: value
+      }));
+    };
+
+    const handleSelectChange = (e: React.ChangeEvent<HTMLSelectElement>) => {
+      const { name, value } = e.target;
+      setFormData((prev: Partial<Evaluation>) => ({
+        ...prev,
+        [name]: value
+      }));
+    };
+
+    const handleCriteriaChange = (criterionId: string, value: number) => {
+      setFormData((prev: Partial<Evaluation>) => ({
+        ...prev,
+        criteria: {
+          ...prev.criteria,
+          [criterionId]: value
+        }
+      }));
+    };
+
     return (
       <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
-        <Card className="w-full max-w-xl overflow-auto max-h-[90vh]">
+        <Card className="w-full max-w-4xl overflow-auto max-h-[90vh]">
           <div className="flex justify-between items-center mb-4">
             <h2 className="text-xl font-bold">{formTitle}</h2>
             <button 
@@ -275,19 +304,19 @@ export default function EvaluationsPage() {
             </button>
           </div>
 
-          <form onSubmit={handleSubmit} className="space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-gray-700 mb-1">الموظف</label>
               <select
+                name="employeeId"
                 value={formData?.employeeId || ''}
-                onChange={(e) => setFormData({ ...formData, employeeId: e.target.value } as any)}
+                onChange={handleSelectChange}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 border"
                 required
-                disabled={isEdit}
               >
                 <option value="">اختر الموظف</option>
-                {employees.map((employee) => (
-                  <option key={`employee-${employee.id}`} value={employee.id}>
+                {employees.map(employee => (
+                  <option key={employee.id} value={employee.id}>
                     {employee.name}
                   </option>
                 ))}
@@ -295,59 +324,49 @@ export default function EvaluationsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">تاريخ التقييم</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">التاريخ</label>
               <input
                 type="date"
-                value={formData?.date instanceof Date ? formData.date.toISOString().split('T')[0] : ''}
-                onChange={(e) => setFormData({ ...formData, date: new Date(e.target.value) } as any)}
+                name="date"
+                value={formData?.date ? new Date(formData.date).toISOString().split('T')[0] : ''}
+                onChange={(e) => {
+                  const date = new Date(e.target.value);
+                  setFormData((prev: Partial<Evaluation>) => ({
+                    ...prev,
+                    date
+                  }));
+                }}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 border"
                 required
               />
             </div>
 
-            <div className="border-t border-gray-200 pt-4">
-              <h3 className="text-lg font-medium text-gray-900 mb-3">معايير التقييم</h3>
-              <div className="space-y-6">
-                {evaluationCriteria.map((criterion) => (
-                  <div key={`criterion-${criterion.id}`} className="bg-gray-50 p-4 rounded-md">
-                    <div className="flex justify-between mb-2">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">معايير التقييم</label>
+              <div className="space-y-4">
+                {evaluationCriteria.map(criterion => (
+                  <div key={criterion.id} className="bg-gray-50 p-4 rounded-lg">
+                    <div className="flex justify-between items-center mb-2">
                       <div>
-                        <h4 className="font-medium text-gray-900">{criterion.name}</h4>
+                        <h3 className="font-medium text-gray-900">{criterion.name}</h3>
                         <p className="text-sm text-gray-500">{criterion.description}</p>
                       </div>
-                      <div className="text-right">
-                        <span className="font-medium">
-                          {formData?.criteria?.[criterion.id] || 3}
-                        </span>
-                        <span className="text-sm text-gray-500 mr-1">
-                          ({ratingLabels[formData?.criteria?.[criterion.id] || 3]})
-                        </span>
+                      <div className="flex items-center space-x-2 space-x-reverse">
+                        {[1, 2, 3, 4, 5].map(rating => (
+                          <button
+                            key={rating}
+                            type="button"
+                            onClick={() => handleCriteriaChange(criterion.id, rating)}
+                            className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-medium transition-colors ${
+                              formData?.criteria?.[criterion.id] === rating
+                                ? 'bg-blue-600 text-white'
+                                : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
+                            }`}
+                          >
+                            {rating}
+                          </button>
+                        ))}
                       </div>
-                    </div>
-                    
-                    <div className="flex items-center justify-center space-x-1 space-x-reverse">
-                      {[1, 2, 3, 4, 5].map((value) => (
-                        <button
-                          key={`rating-${criterion.id}-${value}`}
-                          type="button"
-                          className={`w-10 h-10 rounded-full ${
-                            (formData?.criteria?.[criterion.id] || 3) === value
-                              ? 'bg-blue-600 text-white'
-                              : 'bg-gray-200 text-gray-700 hover:bg-gray-300'
-                          }`}
-                          onClick={() => 
-                            setFormData({
-                              ...formData,
-                              criteria: {
-                                ...(formData?.criteria || {}),
-                                [criterion.id]: value
-                              }
-                            } as any)
-                          }
-                        >
-                          {value}
-                        </button>
-                      ))}
                     </div>
                   </div>
                 ))}
@@ -355,46 +374,47 @@ export default function EvaluationsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">نقاط القوة</label>
+              <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات</label>
               <textarea
-                value={formData?.strengths || ''}
-                onChange={(e) => setFormData({ ...formData, strengths: e.target.value } as any)}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 border"
-                rows={2}
-              ></textarea>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">مجالات التحسين</label>
-              <textarea
-                value={formData?.improvements || ''}
-                onChange={(e) => setFormData({ ...formData, improvements: e.target.value } as any)}
-                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 border"
-                rows={2}
-              ></textarea>
-            </div>
-
-            <div>
-              <label className="block text-sm font-medium text-gray-700 mb-1">ملاحظات إضافية</label>
-              <textarea
+                name="comments"
                 value={formData?.comments || ''}
-                onChange={(e) => setFormData({ ...formData, comments: e.target.value } as any)}
+                onChange={handleInputChange}
                 className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 border"
                 rows={3}
-              ></textarea>
+              />
             </div>
 
-            <div className="flex justify-end gap-4 pt-4">
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">نقاط القوة</label>
+              <textarea
+                name="strengths"
+                value={formData?.strengths || ''}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 border"
+                rows={3}
+              />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">نقاط التحسين</label>
+              <textarea
+                name="improvements"
+                value={formData?.improvements || ''}
+                onChange={handleInputChange}
+                className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 border"
+                rows={3}
+              />
+            </div>
+
+            <div className="flex justify-end space-x-4 space-x-reverse">
               <Button
+                type="button"
                 variant="secondary"
                 onClick={() => isEdit ? setEditingEvaluation(null) : setShowAddForm(false)}
               >
                 إلغاء
               </Button>
-              <Button
-                type="submit"
-                variant="primary"
-              >
+              <Button type="submit" variant="primary">
                 {buttonText}
               </Button>
             </div>
@@ -414,47 +434,35 @@ export default function EvaluationsPage() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col">
-      {/* الهيدر */}
       <Header />
       
       <div className="flex flex-1">
-        {/* القائمة الجانبية */}
         <Sidebar />
         
-        {/* المحتوى الرئيسي */}
         <main className="flex-1 p-6 overflow-y-auto">
           <div className="max-w-7xl mx-auto">
             <div className="flex justify-between items-center mb-6">
-              <h1 className="text-2xl font-bold text-gray-900">تقييمات الموظفين</h1>
+              <h1 className="text-2xl font-bold text-gray-900">التقييمات</h1>
               <Button
                 variant="primary"
                 onClick={() => setShowAddForm(true)}
-                icon={
-                  <svg xmlns="http://www.w3.org/2000/svg" className="h-5 w-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 4v16m8-8H4" />
-                  </svg>
-                }
               >
                 إضافة تقييم جديد
               </Button>
             </div>
 
-            {/* أدوات البحث والتصفية */}
-            <Card className="mb-6">
-              <div className="grid grid-cols-1 md:grid-cols-12 gap-4">
-                <div className="md:col-span-7">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">بحث</label>
+            <div className="bg-white rounded-lg shadow-sm p-4 mb-6">
+              <div className="flex flex-col md:flex-row gap-4">
+                <div className="flex-1">
                   <input
                     type="text"
-                    placeholder="ابحث باسم الموظف أو محتوى التقييم..."
+                    placeholder="بحث عن تقييم..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
                     className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 border"
                   />
                 </div>
-                
-                <div className="md:col-span-5">
-                  <label className="block text-sm font-medium text-gray-700 mb-1">تصفية حسب الفترة</label>
+                <div className="w-full md:w-48">
                   <select
                     value={selectedPeriod}
                     onChange={(e) => setSelectedPeriod(e.target.value)}
@@ -462,26 +470,22 @@ export default function EvaluationsPage() {
                   >
                     <option value="all">جميع الفترات</option>
                     {getAvailablePeriods().map(period => (
-                      <option key={`period-${period}`} value={period}>
+                      <option key={period} value={period}>
                         {formatPeriod(period)}
                       </option>
                     ))}
                   </select>
                 </div>
               </div>
-            </Card>
+            </div>
 
-            {/* عرض البيانات */}
-            <Card>
+            <div className="bg-white rounded-lg shadow-sm overflow-hidden">
               <div className="overflow-x-auto">
                 <table className="min-w-full divide-y divide-gray-200">
                   <thead className="bg-gray-50">
                     <tr>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         الموظف
-                      </th>
-                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        تاريخ التقييم
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         الفترة
@@ -498,77 +502,51 @@ export default function EvaluationsPage() {
                     </tr>
                   </thead>
                   <tbody className="bg-white divide-y divide-gray-200">
-                    {filteredEvaluations.length === 0 ? (
-                      <tr key="no-data">
-                        <td colSpan={6} className="px-6 py-4 text-center text-gray-500">
-                          لا توجد بيانات متطابقة مع معايير البحث
+                    {filteredEvaluations.map((evaluation) => (
+                      <tr key={evaluation.id}>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {getEmployeeName(evaluation.employeeId)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          {formatPeriod(evaluation.period)}
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRatingClassName(calculateAverageRating(evaluation.criteria))}`}>
+                            {calculateAverageRating(evaluation.criteria).toFixed(1)}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          <div className="max-w-xs truncate">
+                            {evaluation.comments || '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
+                          <div className="flex space-x-2 space-x-reverse">
+                            <Button
+                              variant="secondary"
+                              onClick={() => openEditForm(evaluation)}
+                            >
+                              تعديل
+                            </Button>
+                            <Button
+                              variant="secondary"
+                              onClick={() => handleDeleteEvaluation(evaluation.id)}
+                            >
+                              حذف
+                            </Button>
+                          </div>
                         </td>
                       </tr>
-                    ) : (
-                      filteredEvaluations.map((evaluation) => {
-                        const avgRating = calculateAverageRating(evaluation.criteria);
-                        return (
-                          <tr key={`evaluation-${evaluation.id}`} className="hover:bg-gray-50">
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="font-medium text-gray-900">
-                                {getEmployeeName(evaluation.employeeId)}
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {evaluation.date.toLocaleDateString('ar-EG')}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                              {formatPeriod(evaluation.period)}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap">
-                              <div className="flex items-center">
-                                <span key={`rating-badge-${evaluation.id}`} className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${getRatingClassName(avgRating)}`}>
-                                  {avgRating.toFixed(1)}
-                                </span>
-                                
-                                <div key={`rating-bar-${evaluation.id}`} className="ml-4 w-24 bg-gray-200 rounded-full h-2.5">
-                                  <div 
-                                    className="bg-blue-600 h-2.5 rounded-full" 
-                                    style={{ width: `${(avgRating / 5) * 100}%` }}
-                                  ></div>
-                                </div>
-                              </div>
-                            </td>
-                            <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
-                              {evaluation.comments}
-                            </td>
-                            <td className="px-6 py-4 whitespace-nowrap text-sm font-medium space-x-2 space-x-reverse">
-                              <button 
-                                key={`edit-${evaluation.id}`}
-                                onClick={() => openEditForm(evaluation)}
-                                className="text-blue-600 hover:text-blue-900 ml-4"
-                              >
-                                تعديل
-                              </button>
-                              <button 
-                                key={`delete-${evaluation.id}`}
-                                onClick={() => handleDeleteEvaluation(evaluation.id)}
-                                className="text-red-600 hover:text-red-900"
-                              >
-                                حذف
-                              </button>
-                            </td>
-                          </tr>
-                        );
-                      })
-                    )}
+                    ))}
                   </tbody>
                 </table>
               </div>
-            </Card>
+            </div>
           </div>
         </main>
       </div>
 
-      {/* نموذج إضافة تقييم جديد */}
       {showAddForm && renderEvaluationForm()}
-
-      {/* نموذج تعديل التقييم */}
       {editingEvaluation && renderEvaluationForm(true)}
     </div>
   );

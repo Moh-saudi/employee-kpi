@@ -4,16 +4,16 @@ import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, firestore } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
-import { collection, getDocs, query, where, orderBy, limit } from 'firebase/firestore';
+import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { Employee, Evaluation } from '@/types';
 import { Header } from '@/components/layout/Header';
 import Sidebar from '@/components/layout/Sidebar';
 import Card from '@/components/ui/Card';
-import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
-import { Pie, Bar } from 'react-chartjs-2';
+import { Chart as ChartJS, CategoryScale, LinearScale, BarElement } from 'chart.js';
+import { Bar } from 'react-chartjs-2';
 
 // تسجيل مكونات Chart.js
-ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
+ChartJS.register(CategoryScale, LinearScale, BarElement);
 
 export default function DashboardPage() {
   const router = useRouter();
@@ -24,18 +24,6 @@ export default function DashboardPage() {
   const [employeeOfMonth, setEmployeeOfMonth] = useState<Employee | null>(null);
   const [completedEvaluations, setCompletedEvaluations] = useState(0);
   const [pendingEvaluations, setPendingEvaluations] = useState(0);
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (!user) {
-        router.push('/auth/login');
-      } else {
-        fetchData();
-      }
-    });
-
-    return () => unsubscribe();
-  }, [router]);
 
   const fetchData = async () => {
     try {
@@ -146,6 +134,18 @@ export default function DashboardPage() {
       setLoading(false);
     }
   };
+
+  useEffect(() => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
+      if (!user) {
+        router.push('/auth/login');
+      } else {
+        fetchData();
+      }
+    });
+
+    return () => unsubscribe();
+  }, [router, fetchData]);
 
   const calculateAverageRating = (criteria: { [key: string]: number }) => {
     const values = Object.values(criteria);

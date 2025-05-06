@@ -3,9 +3,8 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, AuthError } from 'firebase/auth';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -32,7 +31,7 @@ export default function LoginPage() {
     try {
       await signInWithEmailAndPassword(auth, email, password);
       router.push('/');
-    } catch (error: any) {
+    } catch (error: unknown) {
       console.error('Error logging in:', error);
       setError('البريد الإلكتروني أو كلمة المرور غير صحيحة');
     } finally {
