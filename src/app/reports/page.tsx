@@ -16,6 +16,9 @@ import Card from '@/components/ui/Card';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
 import { FaDownload, FaPrint, FaFilter } from 'react-icons/fa';
+import { FaSearch } from 'react-icons/fa';
+import { format } from 'date-fns';
+import { ar } from 'date-fns/locale';
 
 // تسجيل مكونات Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
@@ -48,11 +51,12 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [startDate, setStartDate] = useState<string>('');
-  const [endDate, setEndDate] = useState<string>('');
+  const [startDate, setStartDate] = useState<Date | null>(null);
+  const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<'evaluations' | 'employees' | 'statistics'>('evaluations');
   const [user, setUser] = useState<{ uid: string } | null>(null);
+  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -255,8 +259,8 @@ export default function ReportsPage() {
         filterText += `الموظف: ${employee?.name || ''}, `;
       }
       
-      if (startDate || endDate) {
-        filterText += `الفترة: ${startDate ? new Date(startDate).toLocaleDateString('ar-EG') : 'البداية'} إلى ${endDate ? new Date(endDate).toLocaleDateString('ar-EG') : 'النهاية'}`;
+      if (startDate && endDate) {
+        filterText += `الفترة: ${startDate.toLocaleDateString('ar-EG')} إلى ${endDate.toLocaleDateString('ar-EG')}`;
       }
     } else if (activeTab === 'employees') {
       if (selectedCategory) {

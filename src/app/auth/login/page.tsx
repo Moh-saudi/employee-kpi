@@ -4,10 +4,7 @@ import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
 import { signInWithEmailAndPassword } from 'firebase/auth';
-import { Header } from '@/components/layout/Header';
-import Sidebar from '@/components/layout/Sidebar';
 import Button from '@/components/ui/Button';
-import Card from '@/components/ui/Card';
 
 export default function LoginPage() {
   const router = useRouter();
