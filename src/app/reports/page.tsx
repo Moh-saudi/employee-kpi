@@ -23,17 +23,6 @@ import { ar } from 'date-fns/locale';
 // تسجيل مكونات Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
 
-// معايير التقييم
-const evaluationCriteria = [
-  { id: 'quality', name: 'جودة العمل' },
-  { id: 'efficiency', name: 'الكفاءة' },
-  { id: 'teamwork', name: 'العمل الجماعي' },
-  { id: 'communication', name: 'التواصل' },
-  { id: 'initiative', name: 'المبادرة' },
-  { id: 'punctuality', name: 'الالتزام بالمواعيد' },
-  { id: 'infection_control', name: 'الالتزام بإجراءات مكافحة العدوى' },
-];
-
 // فئات الموظفين
 const categoryMap: Record<string, string> = {
   'doctor': 'طبيب',
