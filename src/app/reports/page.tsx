@@ -15,10 +15,6 @@ import Button from '@/components/ui/Button';
 import Card from '@/components/ui/Card';
 import { Chart as ChartJS, ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement } from 'chart.js';
 import { Pie, Bar } from 'react-chartjs-2';
-import { FaDownload, FaPrint, FaFilter } from 'react-icons/fa';
-import { FaSearch } from 'react-icons/fa';
-import { format } from 'date-fns';
-import { ar } from 'date-fns/locale';
 
 // تسجيل مكونات Chart.js
 ChartJS.register(ArcElement, Tooltip, Legend, CategoryScale, LinearScale, BarElement);
