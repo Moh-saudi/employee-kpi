@@ -21,15 +21,6 @@ const evaluationCriteria = [
   { id: 'punctuality', name: 'الالتزام بالمواعيد', description: 'الحضور في الموعد المحدد والالتزام بالمواعيد' },
 ];
 
-// تسميات لمستويات التقييم
-const ratingLabels: Record<number, string> = {
-  1: 'ضعيف',
-  2: 'مقبول',
-  3: 'جيد',
-  4: 'جيد جداً',
-  5: 'ممتاز'
-};
-
 type Period = string | { month: number; year: number };
 
 export default function EvaluationsPage() {

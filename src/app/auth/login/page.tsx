@@ -1,24 +1,13 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword, onAuthStateChanged, AuthError } from 'firebase/auth';
+import { signInWithEmailAndPassword } from 'firebase/auth';
+import { Header } from '@/components/layout/Header';
+import Sidebar from '@/components/layout/Sidebar';
 import Button from '@/components/ui/Button';
-
-/** واجهة خصائص مكون الزر */
-interface ButtonProps {
-  /** محتوى الزر */
-  children: React.ReactNode;
-  /** نوع الزر: button أو submit أو reset */
-  type?: 'button' | 'submit' | 'reset';
-  /** نوع التصميم: primary أو secondary أو success أو danger */
-  variant?: 'primary' | 'secondary' | 'success' | 'danger';
-  /** صفوف CSS إضافية */
-  className?: string;
-  /** تعيين حالة التعطيل */
-  disabled?: boolean;
-}
+import Card from '@/components/ui/Card';
 
 export default function LoginPage() {
   const router = useRouter();
@@ -26,16 +15,6 @@ export default function LoginPage() {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
-
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, (user) => {
-      if (user) {
-        router.push('/');
-      }
-    });
-
-    return () => unsubscribe();
-  }, [router]);
 
   const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();

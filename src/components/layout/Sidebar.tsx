@@ -5,11 +5,15 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { FaHome, FaUsers, FaClipboardList, FaChartBar } from 'react-icons/fa';
 import { auth } from '@/lib/firebase';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, User } from 'firebase/auth';
 
-export default function Sidebar() {
+interface SidebarProps {
+  className?: string;
+}
+
+export default function Sidebar({ className = '' }: SidebarProps) {
   const pathname = usePathname();
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<User | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -27,7 +31,7 @@ export default function Sidebar() {
   ];
 
   return (
-    <div className="fixed right-0 top-0 h-screen w-64 bg-white shadow-lg z-50">
+    <div className={`fixed right-0 top-0 h-screen w-64 bg-white shadow-lg z-50 ${className}`}>
       <div className="flex flex-col h-full">
         {/* Logo */}
         <div className="p-6 border-b">

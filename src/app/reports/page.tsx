@@ -52,7 +52,7 @@ export default function ReportsPage() {
   const [endDate, setEndDate] = useState<string>('');
   const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<'evaluations' | 'employees' | 'statistics'>('evaluations');
-  const [user, setUser] = useState<any>(null);
+  const [user, setUser] = useState<{ uid: string } | null>(null);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
