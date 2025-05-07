@@ -51,12 +51,9 @@ export default function ReportsPage() {
   const [loading, setLoading] = useState(true);
   const [selectedEmployee, setSelectedEmployee] = useState<string>('');
   const [selectedCategory, setSelectedCategory] = useState<string>('');
-  const [startDate, setStartDate] = useState<Date | null>(null);
-  const [endDate, setEndDate] = useState<Date | null>(null);
   const [selectedPeriod, setSelectedPeriod] = useState<string>('all');
   const [activeTab, setActiveTab] = useState<'evaluations' | 'employees' | 'statistics'>('evaluations');
   const [user, setUser] = useState<{ uid: string } | null>(null);
-  const [searchTerm, setSearchTerm] = useState('');
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -163,8 +160,6 @@ export default function ReportsPage() {
 
   const filteredEvaluations = evaluations.filter((evaluation) => {
     if (selectedEmployee && evaluation.employeeId !== selectedEmployee) return false;
-    if (startDate && new Date(evaluation.date) < new Date(startDate)) return false;
-    if (endDate && new Date(evaluation.date) > new Date(endDate)) return false;
     if (selectedPeriod && selectedPeriod !== 'all') {
       const periodStr = getPeriodString(evaluation.period);
       if (periodStr !== selectedPeriod) return false;
@@ -259,8 +254,8 @@ export default function ReportsPage() {
         filterText += `الموظف: ${employee?.name || ''}, `;
       }
       
-      if (startDate && endDate) {
-        filterText += `الفترة: ${startDate.toLocaleDateString('ar-EG')} إلى ${endDate.toLocaleDateString('ar-EG')}`;
+      if (selectedPeriod && selectedPeriod !== 'all') {
+        filterText += `الفترة: ${selectedPeriod}`;
       }
     } else if (activeTab === 'employees') {
       if (selectedCategory) {
@@ -527,23 +522,6 @@ export default function ReportsPage() {
                             {getPeriodDisplay(period)}
                           </option>
                         ))}
-                      </select>
-                    </div>
-
-                    <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">الفئة</label>
-                      <select
-                        value={selectedCategory}
-                        onChange={(e) => setSelectedCategory(e.target.value)}
-                        className="block w-full rounded-md border-gray-300 shadow-sm focus:border-blue-500 focus:ring-blue-500 px-4 py-2 border"
-                      >
-                        <option value="">جميع الفئات</option>
-                        <option value="doctor">طبيب</option>
-                        <option value="pharmacist">صيدلي</option>
-                        <option value="dentist">أسنان</option>
-                        <option value="physiotherapist">علاج طبيعي</option>
-                        <option value="administrative">إداري</option>
-                        <option value="other">أخرى</option>
                       </select>
                     </div>
                   </div>
