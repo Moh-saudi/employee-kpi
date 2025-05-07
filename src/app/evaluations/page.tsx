@@ -13,12 +13,12 @@ import Card from '@/components/ui/Card';
 
 // معايير التقييم
 const evaluationCriteria = [
-  { id: 'quality', name: 'جودة العمل', description: 'مدى جودة العمل المنجز ودقته' },
-  { id: 'efficiency', name: 'الكفاءة', description: 'القدرة على إنجاز المهام بكفاءة وفي الوقت المحدد' },
-  { id: 'teamwork', name: 'العمل الجماعي', description: 'القدرة على العمل ضمن فريق والتعاون مع الزملاء' },
-  { id: 'communication', name: 'التواصل', description: 'مهارات التواصل مع الزملاء والمرضى' },
-  { id: 'initiative', name: 'المبادرة', description: 'القدرة على اتخاذ المبادرة وحل المشكلات' },
-  { id: 'punctuality', name: 'الالتزام بالمواعيد', description: 'الحضور في الموعد المحدد والالتزام بالمواعيد' },
+  { id: 'quality', name: 'جودة العمل' },
+  { id: 'efficiency', name: 'الكفاءة' },
+  { id: 'teamwork', name: 'العمل الجماعي' },
+  { id: 'communication', name: 'التواصل' },
+  { id: 'initiative', name: 'المبادرة' },
+  { id: 'punctuality', name: 'الالتزام بالمواعيد' }
 ];
 
 type Period = string | { month: number; year: number };
@@ -339,7 +339,6 @@ export default function EvaluationsPage() {
                     <div className="flex justify-between items-center mb-2">
                       <div>
                         <h3 className="font-medium text-gray-900">{criterion.name}</h3>
-                        <p className="text-sm text-gray-500">{criterion.description}</p>
                       </div>
                       <div className="flex items-center space-x-2 space-x-reverse">
                         {[1, 2, 3, 4, 5].map(rating => (
