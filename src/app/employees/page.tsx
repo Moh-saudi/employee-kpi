@@ -107,8 +107,8 @@ export default function EmployeesPage() {
   const handleAddEmployee = async (e: React.FormEvent) => {
     e.preventDefault();
     
-    if (newEmployee.nationalId && newEmployee.nationalId.length !== 14) {
-      alert('الرقم القومي يجب أن يكون 14 رقمًا');
+    if (!newEmployee.nationalId || newEmployee.nationalId.length !== 14) {
+      alert('الرقم القومي يجب أن يكون 14 رقمًا بالضبط');
       return;
     }
     
@@ -135,8 +135,8 @@ export default function EmployeesPage() {
     
     if (!editingEmployee || !editingEmployee.id) return;
     
-    if (editingEmployee.nationalId && editingEmployee.nationalId.length !== 14) {
-      alert('الرقم القومي يجب أن يكون 14 رقمًا');
+    if (!editingEmployee.nationalId || editingEmployee.nationalId.length !== 14) {
+      alert('الرقم القومي يجب أن يكون 14 رقمًا بالضبط');
       return;
     }
     
@@ -240,6 +240,21 @@ export default function EmployeesPage() {
 
     const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       const { name, value } = e.target;
+      
+      // التحقق من الرقم القومي
+      if (name === 'nationalId') {
+        // السماح فقط بالأرقام
+        const numericValue = value.replace(/[^0-9]/g, '');
+        // تحديد الحد الأقصى بـ 14 رقم
+        const truncatedValue = numericValue.slice(0, 14);
+        
+        setFormData((prev: Partial<FormData>) => ({
+          ...prev,
+          [name]: truncatedValue
+        }));
+        return;
+      }
+      
       setFormData((prev: Partial<FormData>) => ({
         ...prev,
         [name]: value
@@ -289,8 +304,10 @@ export default function EmployeesPage() {
                 value={formData?.nationalId || ''}
                 onChange={handleInputChange}
                 required
+                maxLength={14}
                 pattern="[0-9]{14}"
-                title="الرقم القومي يجب أن يكون 14 رقمًا"
+                title="الرقم القومي يجب أن يكون 14 رقمًا بالضبط"
+                placeholder="أدخل 14 رقمًا"
               />
             </div>
 
@@ -342,6 +359,54 @@ export default function EmployeesPage() {
                 }}
                 required
               />
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-gray-700 mb-1">الملفات الموكلة</label>
+              <div className="space-y-2">
+                {formData?.assignedFiles?.map((file, index) => (
+                  <div key={index} className="flex items-center space-x-2 space-x-reverse">
+                    <Input
+                      type="text"
+                      value={file}
+                      onChange={(e) => {
+                        const newFiles = [...(formData.assignedFiles || [])];
+                        newFiles[index] = e.target.value;
+                        setFormData((prev: Partial<FormData>) => ({
+                          ...prev,
+                          assignedFiles: newFiles
+                        }));
+                      }}
+                      placeholder="اسم الملف"
+                    />
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      onClick={() => {
+                        const newFiles = formData.assignedFiles?.filter((_, i) => i !== index) || [];
+                        setFormData((prev: Partial<FormData>) => ({
+                          ...prev,
+                          assignedFiles: newFiles
+                        }));
+                      }}
+                    >
+                      حذف
+                    </Button>
+                  </div>
+                ))}
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setFormData((prev: Partial<FormData>) => ({
+                      ...prev,
+                      assignedFiles: [...(prev.assignedFiles || []), '']
+                    }));
+                  }}
+                >
+                  إضافة ملف
+                </Button>
+              </div>
             </div>
 
             <div className="flex justify-end space-x-4 space-x-reverse">
@@ -433,6 +498,9 @@ export default function EmployeesPage() {
                         تاريخ التعيين
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        الملفات الموكلة
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         الإجراءات
                       </th>
                     </tr>
@@ -456,7 +524,24 @@ export default function EmployeesPage() {
                           {getAppointmentTypeLabel(employee.appointment)}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
-                          {employee.joinDate ? new Date(employee.joinDate).toLocaleDateString('ar-SA') : '-'}
+                          {employee.joinDate ? new Date(employee.joinDate).toLocaleDateString('en-GB', {
+                            year: 'numeric',
+                            month: '2-digit',
+                            day: '2-digit'
+                          }) : '-'}
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          {employee.assignedFiles && employee.assignedFiles.length > 0 ? (
+                            <div className="space-y-1">
+                              {employee.assignedFiles.map((file, index) => (
+                                <div key={index} className="bg-gray-50 px-2 py-1 rounded text-gray-700">
+                                  {file}
+                                </div>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-gray-400">لا توجد ملفات</span>
+                          )}
                         </td>
                         <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-900">
                           <div className="flex space-x-2 space-x-reverse">

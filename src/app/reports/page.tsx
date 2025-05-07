@@ -188,15 +188,11 @@ export default function ReportsPage() {
           'الفئة': categoryMap[employee?.category || ''] || '',
           'تاريخ التقييم': evaluation.date.toLocaleDateString('ar-EG'),
           'الفترة': evaluation.period || '',
-          'جودة العمل': evaluation.criteria.quality || 0,
-          'الكفاءة': evaluation.criteria.efficiency || 0,
-          'العمل الجماعي': evaluation.criteria.teamwork || 0,
-          'التواصل': evaluation.criteria.communication || 0,
-          'المبادرة': evaluation.criteria.initiative || 0,
-          'الالتزام بالمواعيد': evaluation.criteria.punctuality || 0,
-          'الالتزام بإجراءات مكافحة العدوى': evaluation.criteria.infection_control || 0,
-          'متوسط التقييم': calculateAverageRating(evaluation.criteria).toFixed(1),
+          'إجمالي التقييم': calculateAverageRating(evaluation.criteria).toFixed(1),
+          'نقاط القوة': evaluation.strengths || '',
+          'نقاط التحسين': evaluation.improvements || '',
           'ملاحظات': evaluation.comments || '',
+          'الملفات الموكلة': employee?.assignedFiles?.join(', ') || '',
         };
       });
 
@@ -279,13 +275,15 @@ export default function ReportsPage() {
         evaluation.date.toLocaleDateString('ar-EG'),
         getPeriodDisplay(evaluation.period),
         calculateAverageRating(evaluation.criteria).toFixed(1),
+        evaluation.strengths || '-',
+        evaluation.improvements || '-',
         evaluation.comments || '-'
       ]);
       
       // إنشاء الجدول
       autoTable(doc, {
         startY: 45,
-        head: [['الموظف', 'تاريخ التقييم', 'الفترة', 'متوسط التقييم', 'ملاحظات']],
+        head: [['الموظف', 'تاريخ التقييم', 'الفترة', 'متوسط التقييم', 'نقاط القوة', 'نقاط التحسين', 'ملاحظات']],
         body: tableData,
         theme: 'grid',
         styles: { halign: 'right', font: 'helvetica', fontSize: 10 },
@@ -600,6 +598,12 @@ export default function ReportsPage() {
                               متوسط التقييم
                             </th>
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              نقاط القوة
+                            </th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              نقاط التحسين
+                            </th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                               ملاحظات
                             </th>
                           </tr>
@@ -633,13 +637,16 @@ export default function ReportsPage() {
                                     }`}>
                                       {avgRating.toFixed(1)}
                                     </span>
-                                    
-                                    <div className="ml-4 w-24 bg-gray-200 rounded-full h-2.5">
-                                      <div 
-                                        className="bg-blue-600 h-2.5 rounded-full" 
-                                        style={{ width: `${(avgRating / 5) * 100}%` }}
-                                      ></div>
-                                    </div>
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-500">
+                                  <div className="max-w-xs">
+                                    {evaluation.strengths || '-'}
+                                  </div>
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-500">
+                                  <div className="max-w-xs">
+                                    {evaluation.improvements || '-'}
                                   </div>
                                 </td>
                                 <td className="px-6 py-4 text-sm text-gray-500 max-w-xs truncate">
@@ -755,6 +762,9 @@ export default function ReportsPage() {
                             <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                               متوسط التقييم
                             </th>
+                            <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                              الملفات الموكلة
+                            </th>
                           </tr>
                         </thead>
                         <tbody className="bg-white divide-y divide-gray-200">
@@ -789,7 +799,7 @@ export default function ReportsPage() {
                                 <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                   {employeeEvaluations.length}
                                 </td>
-                                <td className="px-6 py-4 whitespace-nowrap">
+                                <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
                                   {employeeEvaluations.length > 0 ? (
                                     <div className="flex items-center">
                                       <span className={`inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium ${
@@ -804,6 +814,19 @@ export default function ReportsPage() {
                                     </div>
                                   ) : (
                                     <span className="text-gray-400">-</span>
+                                  )}
+                                </td>
+                                <td className="px-6 py-4 text-sm text-gray-500">
+                                  {employee.assignedFiles && employee.assignedFiles.length > 0 ? (
+                                    <div className="space-y-1">
+                                      {employee.assignedFiles.map((file, index) => (
+                                        <div key={index} className="bg-gray-50 px-2 py-1 rounded text-gray-700">
+                                          {file}
+                                        </div>
+                                      ))}
+                                    </div>
+                                  ) : (
+                                    <span className="text-gray-400">لا توجد ملفات</span>
                                   )}
                                 </td>
                               </tr>

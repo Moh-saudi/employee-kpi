@@ -19,7 +19,6 @@ const evaluationCriteria = [
   { id: 'communication', name: 'التواصل', description: 'مهارات التواصل مع الزملاء والمرضى' },
   { id: 'initiative', name: 'المبادرة', description: 'القدرة على اتخاذ المبادرة وحل المشكلات' },
   { id: 'punctuality', name: 'الالتزام بالمواعيد', description: 'الحضور في الموعد المحدد والالتزام بالمواعيد' },
-  { id: 'infection_control', name: 'الالتزام بإجراءات مكافحة العدوى', description: 'مدى الالتزام بإجراءات مكافحة العدوى بالإدارة' },
 ];
 
 // تسميات لمستويات التقييم
@@ -491,7 +490,13 @@ export default function EvaluationsPage() {
                         الفترة
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
-                        متوسط التقييم
+                        إجمالي التقييم
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        نقاط القوة
+                      </th>
+                      <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
+                        نقاط التحسين
                       </th>
                       <th className="px-6 py-3 text-right text-xs font-medium text-gray-500 uppercase tracking-wider">
                         ملاحظات
@@ -514,6 +519,16 @@ export default function EvaluationsPage() {
                           <span className={`px-2 py-1 rounded-full text-xs font-medium ${getRatingClassName(calculateAverageRating(evaluation.criteria))}`}>
                             {calculateAverageRating(evaluation.criteria).toFixed(1)}
                           </span>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          <div className="max-w-xs truncate">
+                            {evaluation.strengths || '-'}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-sm text-gray-900">
+                          <div className="max-w-xs truncate">
+                            {evaluation.improvements || '-'}
+                          </div>
                         </td>
                         <td className="px-6 py-4 text-sm text-gray-900">
                           <div className="max-w-xs truncate">

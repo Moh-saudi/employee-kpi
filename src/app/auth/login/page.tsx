@@ -3,14 +3,20 @@
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth } from '@/lib/firebase';
-import { signInWithEmailAndPassword, AuthError } from 'firebase/auth';
+import { signInWithEmailAndPassword, onAuthStateChanged, AuthError } from 'firebase/auth';
 import Button from '@/components/ui/Button';
 
+/** واجهة خصائص مكون الزر */
 interface ButtonProps {
+  /** محتوى الزر */
   children: React.ReactNode;
+  /** نوع الزر: button أو submit أو reset */
   type?: 'button' | 'submit' | 'reset';
-  variant?: 'primary' | 'secondary';
+  /** نوع التصميم: primary أو secondary أو success أو danger */
+  variant?: 'primary' | 'secondary' | 'success' | 'danger';
+  /** صفوف CSS إضافية */
   className?: string;
+  /** تعيين حالة التعطيل */
   disabled?: boolean;
 }
 
@@ -22,7 +28,7 @@ export default function LoginPage() {
   const [error, setError] = useState('');
 
   useEffect(() => {
-    const unsubscribe = auth.onAuthStateChanged((user) => {
+    const unsubscribe = onAuthStateChanged(auth, (user) => {
       if (user) {
         router.push('/');
       }
@@ -46,6 +52,9 @@ export default function LoginPage() {
       setLoading(false);
     }
   };
+
+  /** حساب صفوف الزر بناءً على حالة التحميل */
+  const buttonClass = `w-full ${loading ? 'opacity-50 cursor-not-allowed' : ''}`;
 
   return (
     <div className="min-h-screen bg-gradient-to-b from-blue-50 to-white font-cairo flex items-center justify-center" dir="rtl">
@@ -95,9 +104,9 @@ export default function LoginPage() {
               />
             </div>
 
-            <Button type="submit" variant="primary" className={`w-full ${loading ? 'opacity-50 cursor-not-allowed' : ''}`}>
-  {loading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
-</Button>
+            <Button type="submit" variant="primary" className={buttonClass}>
+              {loading ? "جاري تسجيل الدخول..." : "تسجيل الدخول"}
+            </Button>
           </form>
         </div>
       </div>

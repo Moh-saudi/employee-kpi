@@ -1,6 +1,6 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { auth, firestore } from '@/lib/firebase';
 import { onAuthStateChanged } from 'firebase/auth';
@@ -25,7 +25,7 @@ export default function DashboardPage() {
   const [completedEvaluations, setCompletedEvaluations] = useState(0);
   const [pendingEvaluations, setPendingEvaluations] = useState(0);
 
-  const fetchData = async () => {
+  const fetchData = useCallback(async () => {
     try {
       setLoading(true);
       
@@ -133,7 +133,7 @@ export default function DashboardPage() {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, (user) => {
@@ -228,7 +228,7 @@ export default function DashboardPage() {
                       <div className="flex-1">
                         <h4 className="text-xl font-bold text-amber-900">{employeeOfWeek.name}</h4>
                         <p className="text-sm text-amber-700">{getCategoryLabel(employeeOfWeek.category)}</p>
-                        <p className="text-sm text-amber-700">الرقم القومي: {employeeOfWeek.nationalId}</p>
+                        <p className="text-sm text-amber-700">الرقم القومي: {employeeOfWeek.nationalId?.toString().slice(0, 10)}</p>
                       </div>
                       <div className="bg-amber-200 text-amber-900 px-3 py-1 rounded-full text-sm font-medium">
                         متميز
@@ -248,7 +248,7 @@ export default function DashboardPage() {
                       <div className="flex-1">
                         <h4 className="text-xl font-bold text-emerald-900">{employeeOfMonth.name}</h4>
                         <p className="text-sm text-emerald-700">{getCategoryLabel(employeeOfMonth.category)}</p>
-                        <p className="text-sm text-emerald-700">الرقم القومي: {employeeOfMonth.nationalId}</p>
+                        <p className="text-sm text-emerald-700">الرقم القومي: {employeeOfMonth.nationalId?.toString().slice(0, 10)}</p>
                       </div>
                       <div className="bg-emerald-200 text-emerald-900 px-3 py-1 rounded-full text-sm font-medium">
                         متميز
